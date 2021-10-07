@@ -9,7 +9,7 @@ receivers:
     webhook_configs:
     - send_resolved: True
 #      Get id -> https://web.telegram.org/z/#-{number} -> -100{number}
-      url: 'http://0.0.0.0:8090/alerts/chatid
+      url: 'http://0.0.0.0:8090/alerts/chatid'
 inhibit_rules:
   - source_match:
       severity: 'critical'
