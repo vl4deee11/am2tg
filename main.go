@@ -5,9 +5,10 @@ import (
 	"am2tg/log"
 	"am2tg/tg"
 	"fmt"
-	"github.com/kelseyhightower/envconfig"
 	"net/http"
 	"regexp"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
@@ -15,8 +16,9 @@ type Config struct {
 		Host string `default:""`
 		Port uint16 `default:"80"`
 	} `split_words:"true"`
-	Token  string `required:"true"`
-	LogLvL string `default:"INFO"`
+	Socks5Proxy string
+	Token       string `required:"true"`
+	LogLvL      string `default:"INFO"`
 }
 
 func main() {
@@ -27,7 +29,7 @@ func main() {
 	}
 	log.MakeLogger(c.LogLvL)
 
-	if err := tg.MakeBot(c.Token); err != nil {
+	if err := tg.MakeBot(c.Token, c.Socks5Proxy); err != nil {
 		log.Logger.Fatal(err)
 	}
 
@@ -35,7 +37,7 @@ func main() {
 	log.Logger.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", c.API.Host, c.API.Port), nil))
 }
 
-var rAlerts = regexp.MustCompile("\\/alerts\\/.*")
+var rAlerts = regexp.MustCompile(`/alerts/.*`)
 
 func route(w http.ResponseWriter, r *http.Request) {
 	lw := log.NewLogWriter(w)
