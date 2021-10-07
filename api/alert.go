@@ -119,7 +119,7 @@ func (alerts *Alerts) format() string {
 			alertDetails[i] += fmt.Sprintf("[%s]", job)
 		}
 		if a.GeneratorURL != "" {
-			alertDetails[i] = fmt.Sprintf("<a href='%s'>%s</a>", a.GeneratorURL, alertDetails[i])
+			alertDetails[i] = fmt.Sprintf("<a href='%s'>%s</a>", a.GeneratorURL, a.GeneratorURL)
 		}
 	}
 	return fmt.Sprintf(
