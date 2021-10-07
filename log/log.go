@@ -24,7 +24,6 @@ var str2lvl = map[string]int{
 	"error": Error,
 	"trace": Trace,
 }
-var logFormat = "[%s]:%s"
 
 type lvlWrap struct {
 	*log.Logger
@@ -61,14 +60,19 @@ func (l *lvlWrap) Println(lvl int, v ...interface{}) {
 	l.Logger.Println(l.lvlFormat(lvl, "%s", v...))
 }
 
-func MakeLogger(l string) {
-	l = strings.ToLower(l)
+func MakeLogger(lvl string) {
+	lvl = strings.ToLower(lvl)
 	for k, v := range str2lvl {
 		lvl2str[v] = strings.ToUpper(k)
 	}
 
 	lo := new(lvlWrap)
 	lo.Logger = log.New(os.Stdin, "", log.LstdFlags)
-	lo.l = str2lvl[l]
+	if l, ok := str2lvl[lvl]; ok {
+		lo.l = l
+	} else {
+		lo.l = 2
+	}
+
 	Logger = lo
 }

@@ -39,10 +39,10 @@ func AlertsPOST(w http.ResponseWriter, r *http.Request) {
 	chatId, err := strconv.Atoi(sli[len(sli)-1])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Logger.Printf(log.Error, "cannot convert chatId=%s ot int:", sli[len(sli)-1], err.Error())
+		log.Logger.Printf(log.Error, "cannot convert chatId=%s ot int:%s", sli[len(sli)-1], err.Error())
 		return
 	}
-	log.Logger.Printf(log.Debug, "get chat id = %s", chatId)
+	log.Logger.Printf(log.Debug, "get chat id = %d", chatId)
 	bot := tg.GetTGBot()
 	msg := tgbotapi.NewMessage(int64(chatId), alerts.format())
 	msg.ParseMode = tgbotapi.ModeHTML
