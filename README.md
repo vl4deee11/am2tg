@@ -29,4 +29,10 @@ Available environment variables
 `AM2TG_TOKEN` - telegram bot token
 
 `AM2TG_LOGLVL` - log level (`DEBUG` || `INFO` || `WARN` || `ERROR` || `TRACE`)
-    
+
+## API
+### GET /health
+Health probe
+
+### POST /alerts/:chatid
+Push new alert to telegram

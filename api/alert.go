@@ -5,14 +5,14 @@ import (
 	"am2tg/tg"
 	"encoding/json"
 	"fmt"
-	tgbotapi "gopkg.in/telegram-bot-api.v4"
 	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
-)
 
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
+)
 
 func AlertsPOST(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -29,22 +29,22 @@ func AlertsPOST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var alerts Alerts
-	if err := json.Unmarshal(body, &alerts); err != nil {
+	if err = json.Unmarshal(body, &alerts); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Logger.Print(log.Error, err.Error())
 		return
 	}
 
 	sli := strings.Split(r.RequestURI, "/")
-	chatId, err := strconv.Atoi(sli[len(sli)-1])
+	chatID, err := strconv.Atoi(sli[len(sli)-1])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Logger.Printf(log.Error, "cannot convert chatId=%s ot int:%s", sli[len(sli)-1], err.Error())
 		return
 	}
-	log.Logger.Printf(log.Debug, "get chat id = %d", chatId)
+	log.Logger.Printf(log.Debug, "get chat id = %d", chatID)
 	bot := tg.GetTGBot()
-	msg := tgbotapi.NewMessage(int64(chatId), alerts.format())
+	msg := tgbotapi.NewMessage(int64(chatID), alerts.format())
 	msg.ParseMode = tgbotapi.ModeHTML
 	if _, err := bot.Send(msg); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -106,26 +106,19 @@ func (alerts *Alerts) format() string {
 	sort.Strings(keys)
 	commonAnnotations := make([]string, 0, len(alerts.CommonAnnotations))
 	for _, k := range keys {
-		commonAnnotations = append(commonAnnotations, fmt.Sprintf("\n%s: <code>%s</code>", k, alerts.CommonAnnotations[k]))
+		commonAnnotations = append(commonAnnotations, fmt.Sprintf("\n<b>%s:</b> <code>%s</code>", k, alerts.CommonAnnotations[k]))
 	}
 
 	alertDetails := make([]string, len(alerts.Alerts))
-	for i, a := range alerts.Alerts {
-		if instance, ok := a.Labels["instance"]; ok {
-			instanceString, _ := instance.(string)
-			alertDetails[i] += strings.Split(instanceString, ":")[0]
-		}
-		if job, ok := a.Labels["job"]; ok {
-			alertDetails[i] += fmt.Sprintf("[%s]", job)
-		}
-		if a.GeneratorURL != "" {
-			alertDetails[i] = fmt.Sprintf("<a href='%s'>%s</a>", a.GeneratorURL, a.GeneratorURL)
-		}
+	for i := range alerts.Alerts {
+		alertDetails[i] = fmt.Sprintf(
+			"<b>starts at:</b> <code>%s</code>\n<b>ends at:</b> <code>%s</code>",
+			alerts.Alerts[i].StartsAt,
+			alerts.Alerts[i].EndsAt,
+		)
 	}
 	return fmt.Sprintf(
-		"<a href='%s/#/alerts?receiver=%s'>[%s:%d]</a>\ngrouped by: %s\nlabels: %s%s\n%s",
-		alerts.ExternalURL,
-		alerts.Receiver,
+		"<b>[%s:%d]</b>\n<b>Grouped by:</b> %s\n<b>Labels:</b> %s%s\n%s",
 		strings.ToUpper(alerts.Status),
 		len(alerts.Alerts),
 		strings.Join(groupLabels, ", "),

@@ -1,9 +1,11 @@
 package tg
 
 import (
-	"golang.org/x/net/proxy"
-	"gopkg.in/telegram-bot-api.v4"
 	"net/http"
+
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
+
+	"golang.org/x/net/proxy"
 )
 
 var bot *tgbotapi.BotAPI
@@ -15,7 +17,7 @@ func GetTGBot() *tgbotapi.BotAPI {
 	panic("Bot not initialized")
 }
 
-func MakeBot(t string, proxyURL string) error {
+func MakeBot(t, proxyURL string) error {
 	if proxyURL != "" {
 		dialSocksProxy, err := proxy.SOCKS5("tcp", proxyURL, nil, proxy.Direct)
 		if err != nil {

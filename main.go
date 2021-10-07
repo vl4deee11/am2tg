@@ -5,9 +5,10 @@ import (
 	"am2tg/log"
 	"am2tg/tg"
 	"fmt"
-	"github.com/kelseyhightower/envconfig"
 	"net/http"
 	"regexp"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
@@ -36,7 +37,7 @@ func main() {
 	log.Logger.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", c.API.Host, c.API.Port), nil))
 }
 
-var rAlerts = regexp.MustCompile("\\/alerts\\/.*")
+var rAlerts = regexp.MustCompile(`/alerts/.*`)
 
 func route(w http.ResponseWriter, r *http.Request) {
 	lw := log.NewLogWriter(w)
