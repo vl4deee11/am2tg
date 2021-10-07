@@ -15,8 +15,9 @@ type Config struct {
 		Host string `default:""`
 		Port uint16 `default:"80"`
 	} `split_words:"true"`
-	Token  string `required:"true"`
-	LogLvL string `default:"INFO"`
+	Socks5Proxy string
+	Token       string `required:"true"`
+	LogLvL      string `default:"INFO"`
 }
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	}
 	log.MakeLogger(c.LogLvL)
 
-	if err := tg.MakeBot(c.Token); err != nil {
+	if err := tg.MakeBot(c.Token, c.Socks5Proxy); err != nil {
 		log.Logger.Fatal(err)
 	}
 
