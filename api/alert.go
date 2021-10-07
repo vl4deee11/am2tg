@@ -3,6 +3,7 @@ package api
 import (
 	"am2tg/log"
 	"am2tg/tg"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -44,12 +45,16 @@ func AlertsPOST(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Logger.Printf(log.Debug, "get chat id = %d", chatID)
 	bot := tg.GetTGBot()
-	msg := tgbotapi.NewMessage(int64(chatID), alerts.format())
-	msg.ParseMode = tgbotapi.ModeHTML
-	if _, err := bot.Send(msg); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Logger.Println(log.Error, err.Error())
-		return
+
+	chunkedMsg := alerts.format()
+	for i := range chunkedMsg {
+		msg := tgbotapi.NewMessage(int64(chatID), chunkedMsg[i])
+		if _, err := bot.Send(msg); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Logger.Println(log.Error, err.Error())
+			_, _ = bot.Send(tgbotapi.NewMessage(int64(chatID), "Error sending message, checkout logs"))
+			return
+		}
 	}
 	log.Logger.Println(log.Info, "send alerts successfully")
 	w.WriteHeader(http.StatusOK)
@@ -76,7 +81,7 @@ type Alert struct {
 	Status       string                 `json:"status"`
 }
 
-func (alerts *Alerts) format() string {
+func (alerts *Alerts) format() []string {
 	keys := make([]string, 0, len(alerts.GroupLabels))
 	for k := range alerts.GroupLabels {
 		keys = append(keys, k)
@@ -84,7 +89,7 @@ func (alerts *Alerts) format() string {
 	sort.Strings(keys)
 	groupLabels := make([]string, 0, len(alerts.GroupLabels))
 	for _, k := range keys {
-		groupLabels = append(groupLabels, fmt.Sprintf("%s=<code>%s</code>", k, alerts.GroupLabels[k]))
+		groupLabels = append(groupLabels, fmt.Sprintf("%s=%s", k, alerts.GroupLabels[k]))
 	}
 
 	keys = make([]string, 0, len(alerts.CommonLabels))
@@ -95,7 +100,7 @@ func (alerts *Alerts) format() string {
 	commonLabels := make([]string, 0, len(alerts.CommonLabels))
 	for _, k := range keys {
 		if _, ok := alerts.GroupLabels[k]; !ok {
-			commonLabels = append(commonLabels, fmt.Sprintf("%s=<code>%s</code>", k, alerts.CommonLabels[k]))
+			commonLabels = append(commonLabels, fmt.Sprintf("%s=%s", k, alerts.CommonLabels[k]))
 		}
 	}
 
@@ -106,24 +111,55 @@ func (alerts *Alerts) format() string {
 	sort.Strings(keys)
 	commonAnnotations := make([]string, 0, len(alerts.CommonAnnotations))
 	for _, k := range keys {
-		commonAnnotations = append(commonAnnotations, fmt.Sprintf("\n<b>%s:</b> <code>%s</code>", k, alerts.CommonAnnotations[k]))
+		commonAnnotations = append(commonAnnotations, fmt.Sprintf("\n%s: %s", k, alerts.CommonAnnotations[k]))
 	}
 
 	alertDetails := make([]string, len(alerts.Alerts))
 	for i := range alerts.Alerts {
-		alertDetails[i] = fmt.Sprintf(
-			"<b>starts at:</b> <code>%s</code>\n<b>ends at:</b> <code>%s</code>",
-			alerts.Alerts[i].StartsAt,
-			alerts.Alerts[i].EndsAt,
-		)
+		if alerts.Alerts[i].Status == "firing" {
+			alertDetails[i] = fmt.Sprintf(
+				"Alert[%d]: \n starts_at=%s",
+				i,
+				alerts.Alerts[i].StartsAt,
+			)
+		} else {
+			alertDetails[i] = fmt.Sprintf(
+				"Alert[%d]: \n starts_at= %s \n ends_at=%s",
+				i,
+				alerts.Alerts[i].StartsAt,
+				alerts.Alerts[i].EndsAt,
+			)
+		}
 	}
-	return fmt.Sprintf(
-		"<b>[%s:%d]</b>\n<b>Grouped by:</b> %s\n<b>Labels:</b> %s%s\n%s",
+	return chunkMsg(fmt.Sprintf(
+		"[%s:%d]\nGrouped by: %s\nLabels: %s%s\n%s",
 		strings.ToUpper(alerts.Status),
 		len(alerts.Alerts),
 		strings.Join(groupLabels, ", "),
 		strings.Join(commonLabels, ", "),
 		strings.Join(commonAnnotations, ""),
-		strings.Join(alertDetails, ", "),
-	)
+		strings.Join(alertDetails, "\n"),
+	))
+}
+
+func chunkMsg(s string) []string {
+	// TG Api max msg size
+	max := 4000
+
+	var sb strings.Builder
+	var chunks []string
+
+	runes := bytes.Runes([]byte(s))
+	l := len(runes)
+	for i := range runes {
+		sb.WriteRune(runes[i])
+		if (i+1)%max == 0 {
+			chunks = append(chunks, sb.String())
+			sb.Reset()
+		} else if (i+1) == l {
+			chunks = append(chunks, sb.String())
+		}
+	}
+
+	return chunks
 }
