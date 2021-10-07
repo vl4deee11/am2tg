@@ -125,7 +125,7 @@ func (alerts *Alerts) format() []string {
 		} else {
 			alertDetails[i] = fmt.Sprintf(
 				"Alert[%d]: \n starts_at= %s \n ends_at=%s",
-				i,
+				i+1,
 				alerts.Alerts[i].StartsAt,
 				alerts.Alerts[i].EndsAt,
 			)
@@ -150,13 +150,13 @@ func chunkMsg(s string) []string {
 	var chunks []string
 
 	runes := bytes.Runes([]byte(s))
-	l := len(runes)
+	l := len(runes) - 1
 	for i := range runes {
 		sb.WriteRune(runes[i])
-		if (i+1)%max == 0 {
+		if sb.Len() == max {
 			chunks = append(chunks, sb.String())
 			sb.Reset()
-		} else if (i+1) == l {
+		} else if i == l {
 			chunks = append(chunks, sb.String())
 		}
 	}
