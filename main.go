@@ -30,10 +30,12 @@ func main() {
 	log.MakeLogger(c.LogLvL)
 
 	if err := tg.MakeBot(c.Token, c.Socks5Proxy); err != nil {
-		log.Logger.Fatal(err)
+		log.Logger.Error(err)
+		return
 	}
 
 	http.HandleFunc("/", route)
+	log.Logger.Info("service start")
 	log.Logger.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", c.API.Host, c.API.Port), nil))
 }
 
