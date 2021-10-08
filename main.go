@@ -13,7 +13,7 @@ import (
 
 type Config struct {
 	API struct {
-		Host string `default:""`
+		Host string `default:"0.0.0.0"`
 		Port uint16 `default:"80"`
 	} `split_words:"true"`
 	Socks5Proxy string
@@ -39,10 +39,23 @@ func main() {
 
 var rAlerts = regexp.MustCompile(`/alerts/.*`)
 
+type WriterWithStatusCode struct {
+	http.ResponseWriter
+	StatusCode int
+}
+
+func NewWriter(w http.ResponseWriter) *WriterWithStatusCode {
+	return &WriterWithStatusCode{w, http.StatusOK}
+}
+
+func (w *WriterWithStatusCode) WriteHeader(code int) {
+	w.StatusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
 func route(w http.ResponseWriter, r *http.Request) {
-	lw := log.NewLogWriter(w)
-	defer log.Logger.Printf(
-		log.Info,
+	lw := NewWriter(w)
+	defer log.Logger.Infof(
 		"%s %s%s [%d]",
 		r.Method,
 		r.Host,

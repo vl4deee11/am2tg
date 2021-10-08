@@ -3,14 +3,12 @@ package tg
 import (
 	"net/http"
 
-	tgbotapi "gopkg.in/telegram-bot-api.v4"
-
 	"golang.org/x/net/proxy"
 )
 
-var bot *tgbotapi.BotAPI
+var bot *Bot
 
-func GetTGBot() *tgbotapi.BotAPI {
+func GetTGBot() *Bot {
 	if bot != nil {
 		return bot
 	}
@@ -23,18 +21,24 @@ func MakeBot(t, proxyURL string) error {
 		if err != nil {
 			return err
 		}
-		cli := &http.Client{Transport: &http.Transport{Dial: dialSocksProxy.Dial}}
-		_bot, err := tgbotapi.NewBotAPIWithClient(t, cli)
-		if err != nil {
+		bot = &Bot{
+			token: t,
+			cli: &http.Client{
+				Transport: &http.Transport{
+					Dial: dialSocksProxy.Dial,
+				},
+			},
+		}
+
+		if err := bot.ping(); err != nil {
 			return err
 		}
-		bot = _bot
+
 		return nil
 	}
-	_bot, err := tgbotapi.NewBotAPI(t)
-	if err != nil {
+	bot = &Bot{token: t, cli: new(http.Client)}
+	if err := bot.ping(); err != nil {
 		return err
 	}
-	bot = _bot
 	return nil
 }
