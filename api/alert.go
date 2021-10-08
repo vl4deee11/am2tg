@@ -113,10 +113,6 @@ func (alerts *Alerts) format() []string {
 	alertDetails := make([]string, len(alerts.Alerts))
 	for i := range alerts.Alerts {
 		if alerts.Alerts[i].Status == "firing" {
-			//startsAt, err := time.Parse("", alerts.Alerts[i].StartsAt)
-			//if err != nil {
-			//	log.Logger.Printf(log.Warn, "cannot parse started_at=%s", alerts.Alerts[i].StartsAt)
-			//}
 			alertDetails[i] = fmt.Sprintf(
 				"Alert[%d]: \n starts_at=%s",
 				i+1,
