@@ -100,7 +100,7 @@ func MakeLogger(lvl string) {
 	}
 
 	lo := new(lvlWrap)
-	lo.Logger = log.New(os.Stdin, "", log.LstdFlags)
+	lo.Logger = log.New(os.Stdout, "", log.LstdFlags)
 	if l, ok := str2lvl[lvl]; ok {
 		lo.l = l
 	} else {
