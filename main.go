@@ -67,13 +67,13 @@ func route(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.URL.Path == "/health" || r.URL.Path == "/ready":
 		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprintf(w, "Ok")
+		_, _ = fmt.Fprintf(w, "ok")
 		return
 	case rAlerts.MatchString(r.URL.Path):
 		api.AlertsPOST(w, r)
 		return
 	default:
 		w.WriteHeader(http.StatusNotFound)
-		_, _ = fmt.Fprintf(w, "404 Not found")
+		_, _ = fmt.Fprintf(w, "404 not found")
 	}
 }

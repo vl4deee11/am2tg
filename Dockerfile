@@ -1,5 +1,5 @@
 # Context dir .
-FROM golang:1.15 as build
+FROM golang:1.15-alpine as build
 
 WORKDIR /go/src/am2tg
 COPY . /go/src/am2tg
