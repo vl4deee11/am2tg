@@ -8,21 +8,21 @@ import (
 )
 
 const (
-	Trace = iota
-	Debug
-	Info
-	Warn
-	Error
+	trace = iota
+	debug
+	info
+	warn
+	err
 )
 
 var Logger *lvlWrap
 var lvl2str = map[int]string{}
 var str2lvl = map[string]int{
-	"debug": Debug,
-	"info":  Info,
-	"warn":  Warn,
-	"error": Error,
-	"trace": Trace,
+	"debug": debug,
+	"info":  info,
+	"warn":  warn,
+	"error": err,
+	"trace": trace,
 }
 
 type lvlWrap struct {
@@ -39,21 +39,54 @@ func (l *lvlWrap) lvlFormat(lvl int, format string, v ...interface{}) string {
 	return fmt.Sprintf(format, v...)
 }
 
-func (l *lvlWrap) Printf(lvl int, format string, v ...interface{}) {
+func (l *lvlWrap) Tracef(format string, v ...interface{}) {
+	l.printf(trace, format, v...)
+}
+
+func (l *lvlWrap) Trace(v ...interface{}) {
+	l.println(trace, v...)
+}
+
+func (l *lvlWrap) Debugf(format string, v ...interface{}) {
+	l.printf(debug, format, v...)
+}
+
+func (l *lvlWrap) Debug(v ...interface{}) {
+	l.println(debug, v...)
+}
+
+func (l *lvlWrap) Infof(format string, v ...interface{}) {
+	l.printf(info, format, v...)
+}
+
+func (l *lvlWrap) Info(v ...interface{}) {
+	l.println(info, v...)
+}
+
+func (l *lvlWrap) Warnf(format string, v ...interface{}) {
+	l.printf(warn, format, v...)
+}
+
+func (l *lvlWrap) Warn(v ...interface{}) {
+	l.println(info, v...)
+}
+
+func (l *lvlWrap) Errorf(format string, v ...interface{}) {
+	l.printf(err, format, v...)
+}
+
+func (l *lvlWrap) Error(v ...interface{}) {
+	l.println(err, v...)
+}
+
+func (l *lvlWrap) printf(lvl int, format string, v ...interface{}) {
 	if !l.canPrint(lvl) {
 		return
 	}
 	l.Logger.Println(l.lvlFormat(lvl, format, v...))
 }
 
-func (l *lvlWrap) Print(lvl int, v ...interface{}) {
-	if !l.canPrint(lvl) {
-		return
-	}
-	l.Logger.Print(l.lvlFormat(lvl, "%s", v...))
-}
-
-func (l *lvlWrap) Println(lvl int, v ...interface{}) {
+func (l *lvlWrap) println(lvl int, v ...interface{}) {
 	if !l.canPrint(lvl) {
 		return
 	}

@@ -11,8 +11,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
-	tgbotapi "gopkg.in/telegram-bot-api.v4"
 )
 
 func AlertsPOST(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +23,14 @@ func AlertsPOST(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Logger.Print(log.Error, err.Error())
+		log.Logger.Error(err.Error())
 		return
 	}
 
 	var alerts Alerts
 	if err = json.Unmarshal(body, &alerts); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Logger.Print(log.Error, err.Error())
+		log.Logger.Error(err.Error())
 		return
 	}
 
@@ -40,23 +38,21 @@ func AlertsPOST(w http.ResponseWriter, r *http.Request) {
 	chatID, err := strconv.Atoi(sli[len(sli)-1])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Logger.Printf(log.Error, "cannot convert chatId=%s ot int:%s", sli[len(sli)-1], err.Error())
+		log.Logger.Errorf("cannot convert chatId=%s ot int:%s", sli[len(sli)-1], err.Error())
 		return
 	}
-	log.Logger.Printf(log.Debug, "get chat id = %d", chatID)
+	log.Logger.Debugf("get chat id = %d", chatID)
 	bot := tg.GetTGBot()
 
 	chunkedMsg := alerts.format()
 	for i := range chunkedMsg {
-		msg := tgbotapi.NewMessage(int64(chatID), chunkedMsg[i])
-		if _, err := bot.Send(msg); err != nil {
+		if err := bot.SendMsg(int64(chatID), chunkedMsg[i]); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Logger.Println(log.Error, err.Error())
-			_, _ = bot.Send(tgbotapi.NewMessage(int64(chatID), "Error sending message, checkout logs"))
+			log.Logger.Error(err.Error())
 			return
 		}
 	}
-	log.Logger.Println(log.Info, "send alerts successfully")
+	log.Logger.Info("send alerts successfully")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -119,7 +115,7 @@ func (alerts *Alerts) format() []string {
 		if alerts.Alerts[i].Status == "firing" {
 			alertDetails[i] = fmt.Sprintf(
 				"Alert[%d]: \n starts_at=%s",
-				i,
+				i+1,
 				alerts.Alerts[i].StartsAt,
 			)
 		} else {
