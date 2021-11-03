@@ -1,8 +1,8 @@
 package api
 
 import (
+	"am2tg/internal/tg"
 	"am2tg/pkg/log"
-	"am2tg/pkg/tg"
 	"bytes"
 	"encoding/json"
 	"fmt"

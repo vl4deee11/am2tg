@@ -1,13 +1,14 @@
 package main
 
 import (
-	"am2tg/pkg/api"
+	"am2tg/internal/api"
+	"am2tg/internal/tg"
 	"am2tg/pkg/log"
-	"am2tg/pkg/tg"
 	"fmt"
-	"github.com/kelseyhightower/envconfig"
 	"net/http"
 	"regexp"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
