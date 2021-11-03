@@ -1,7 +1,7 @@
 package tg
 
 import (
-	"am2tg/log"
+	"am2tg/pkg/log"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
