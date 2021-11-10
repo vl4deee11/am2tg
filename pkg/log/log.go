@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"unsafe"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 )
 
 var Logger *lvlWrap
-var lvl2str = map[int]string{}
+var lvl2str = [5]string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR"}
 var str2lvl = map[string]int{
 	"debug": debug,
 	"info":  info,
@@ -35,8 +36,12 @@ func (l *lvlWrap) canPrint(lvl int) bool {
 }
 
 func (l *lvlWrap) lvlFormat(lvl int, format string, v ...interface{}) string {
-	format = fmt.Sprintf("[%s] %s", lvl2str[lvl], format)
-	return fmt.Sprintf(format, v...)
+	buf := make([]byte, 0, len(lvl2str[lvl])+len(format)+3)
+	buf = append(buf, 91)
+	buf = append(buf, lvl2str[lvl]...)
+	buf = append(buf, 93, 32)
+	buf = append(buf, format...)
+	return fmt.Sprintf(*(*string)(unsafe.Pointer(&buf)), v...)
 }
 
 func (l *lvlWrap) Tracef(format string, v ...interface{}) {
@@ -95,9 +100,6 @@ func (l *lvlWrap) println(lvl int, v ...interface{}) {
 
 func MakeLogger(lvl string) {
 	lvl = strings.ToLower(lvl)
-	for k, v := range str2lvl {
-		lvl2str[v] = strings.ToUpper(k)
-	}
 
 	lo := new(lvlWrap)
 	lo.Logger = log.New(os.Stdout, "", log.LstdFlags)
